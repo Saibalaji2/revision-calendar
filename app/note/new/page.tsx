@@ -1,8 +1,8 @@
 "use client";
-export const dynamic = "force-dynamic";
-import { useSearchParams, useRouter } from "next/navigation";
 
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+
+import { useState, useEffect } from "react";
 
 import {
 
@@ -19,9 +19,7 @@ export default function NewNotePage() {
 
   const router = useRouter();
 
-  const searchParams = useSearchParams();
-
-  const date = searchParams.get("date");
+  const [date, setDate] = useState("");
 
   const [title, setTitle] = useState("");
 
@@ -30,6 +28,22 @@ export default function NewNotePage() {
   const [loading, setLoading] = useState(false);
 
   const [revision147, setRevision147] = useState(false);
+
+  useEffect(() => {
+
+    if (typeof window !== "undefined") {
+
+      const params = new URLSearchParams(
+        window.location.search
+      );
+
+      const selectedDate = params.get("date") || "";
+
+      setDate(selectedDate);
+
+    }
+
+  }, []);
 
   const create147Date = (baseDate: string) => {
 
@@ -51,7 +65,7 @@ export default function NewNotePage() {
 
       setLoading(true);
 
-      // MAIN TOPIC
+      // MAIN EVENT
 
       await addDoc(
 
@@ -73,7 +87,7 @@ export default function NewNotePage() {
 
       );
 
-      // 147 REVISION TOPIC
+      // 147 REVISION EVENT
 
       if (revision147) {
 
@@ -90,7 +104,7 @@ export default function NewNotePage() {
 
           {
             title: `${title} Revision`,
-            notes: `Revision for topic created on ${date}\n\n${notes}`,
+            notes: `Revision created from ${date}\n\n${notes}`,
             date: revisionDate,
             completed: false,
             isRevision: true,
@@ -143,7 +157,7 @@ export default function NewNotePage() {
             mb-6
           "
         >
-          ← Back To Calendar
+          ← Back
         </button>
 
         {/* CARD */}
@@ -229,7 +243,7 @@ export default function NewNotePage() {
                 setNotes(e.target.value)
               }
               rows={12}
-              placeholder="Write notes here..."
+              placeholder="Write notes..."
               className="
                 w-full
                 bg-[#0b1020]
@@ -255,7 +269,6 @@ export default function NewNotePage() {
               py-4
               rounded-2xl
               font-bold
-              transition
             "
           >
 
