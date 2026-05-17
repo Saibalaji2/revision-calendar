@@ -123,10 +123,12 @@ export default function NewNotePage() {
 
       {/* 147 BUTTON */}
 
-      <Toggle147
-        enabled={revision147}
-        setEnabled={setRevision147}
-      />
+      <div className="fixed bottom-6 right-6 z-[9999]">
+        <Toggle147
+          enabled={revision147}
+          setEnabled={setRevision147}
+        />
+      </div>
 
       <div className="max-w-4xl mx-auto">
 
