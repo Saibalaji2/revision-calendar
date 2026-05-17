@@ -6,19 +6,23 @@ import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
 
-  apiKey: "AIzaSyD4hZhKBlGf4nK7lpa94-Ib6sj1-q4h--4",
+  apiKey:
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
 
-  authDomain: "calendar-app-e2b8a.firebaseapp.com",
+  authDomain:
+    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
 
-  projectId: "calendar-app-e2b8a",
+  projectId:
+    process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
 
-  storageBucket: "calendar-app-e2b8a.appspot.com",
+  storageBucket:
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
 
-  messagingSenderId: "1083193235317",
+  messagingSenderId:
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
 
-  appId: "1:1083193235317:web:4f847243eccd54f662253c",
-
-  measurementId: "G-4H8FWYM0NX"
+  appId:
+    process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 
 };
 
