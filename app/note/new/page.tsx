@@ -1,5 +1,5 @@
 "use client";
-
+export const dynamic = "force-dynamic";
 import { auth, db } from "@/lib/firebase";
 
 import {
