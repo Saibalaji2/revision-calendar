@@ -1,280 +1,482 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+export const dynamic = "force-dynamic";
 
-import { useState, useEffect } from "react";
+import {
+
+  useSearchParams,
+
+  useRouter,
+
+} from "next/navigation";
+
+import {
+
+  useState,
+
+  useEffect,
+
+} from "react";
 
 import {
 
   collection,
+
   addDoc,
 
 } from "firebase/firestore";
 
-import { auth, db } from "@/lib/firebase";
+import {
 
-import Toggle147 from "@/components/Toggle147";
+  auth,
+
+  db,
+
+} from "@/lib/firebase";
 
 export default function NewNotePage() {
 
-  const router = useRouter();
+  const searchParams =
+    useSearchParams();
 
-  const [date, setDate] = useState("");
+  const router =
+    useRouter();
 
-  const [title, setTitle] = useState("");
+  const date =
+    searchParams.get("date") || "";
 
-  const [notes, setNotes] = useState("");
+  const [title, setTitle] =
+    useState("");
 
-  const [loading, setLoading] = useState(false);
+  const [notes, setNotes] =
+    useState("");
 
-  const [revision147, setRevision147] = useState(false);
+  const [enable147,
+    setEnable147] =
+      useState(false);
 
   useEffect(() => {
 
-    if (typeof window !== "undefined") {
-
-      const params = new URLSearchParams(
-        window.location.search
+    const saved =
+      localStorage.getItem(
+        "147-enabled"
       );
 
-      const selectedDate = params.get("date") || "";
+    if (saved === "true") {
 
-      setDate(selectedDate);
+      setEnable147(true);
 
     }
 
   }, []);
 
-  const create147Date = (baseDate: string) => {
+  const createRecurringEvents = (
+    baseDate: string,
+    title: string,
+    notes: string
+  ) => {
 
-    const current = new Date(baseDate);
+    const revisionDays =
+      [1, 4, 7];
 
-    current.setDate(current.getDate() + 1);
+    const recurringEvents = [];
 
-    return current.toISOString().split("T")[0];
+    for (const day of revisionDays) {
 
-  };
+      const nextDate =
+        new Date(baseDate);
 
-  const saveNote = async () => {
-
-    try {
-
-      const user = auth.currentUser;
-
-      if (!user || !date) return;
-
-      setLoading(true);
-
-      // MAIN EVENT
-
-      await addDoc(
-
-        collection(
-          db,
-          "users",
-          user.uid,
-          "events"
-        ),
-
-        {
-          title,
-          notes,
-          date,
-          completed: false,
-          isRevision: false,
-          createdAt: Date.now(),
-        }
-
+      nextDate.setDate(
+        nextDate.getDate() + day
       );
 
-      // 147 REVISION EVENT
+      // IMPORTANT DATE FORMAT FIX
 
-      if (revision147) {
+      const formattedDate =
+`${nextDate.getFullYear()}-${
+nextDate.getMonth() + 1
+}-${
+nextDate.getDate()
+}`;
 
-        const revisionDate = create147Date(date);
+      recurringEvents.push({
 
-        await addDoc(
+        title:
+`${title} - Revision ${day}`,
 
+        notes:
+`Original Study Date:
+${baseDate}
+
+${notes}`,
+
+        date: formattedDate,
+
+        isRevision: true,
+
+        completed: false,
+
+        createdAt: Date.now(),
+
+      });
+
+    }
+
+    return recurringEvents;
+  };
+
+  const saveEvent =
+    async () => {
+
+      try {
+
+        const user =
+          auth.currentUser;
+
+        if (!user) {
+
+          alert(
+            "User not logged in"
+          );
+
+          return;
+        }
+
+        const eventsRef =
           collection(
             db,
             "users",
             user.uid,
             "events"
-          ),
+          );
 
-          {
-            title: `${title} Revision`,
-            notes: `Revision created from ${date}\n\n${notes}`,
-            date: revisionDate,
+        // MAIN EVENT
+
+        const promises = [];
+
+        promises.push(
+
+          addDoc(eventsRef, {
+
+            title,
+
+            notes,
+
+            date,
+
+            isRevision: false,
+
             completed: false,
-            isRevision: true,
-            createdAt: Date.now(),
-          }
 
+            createdAt: Date.now(),
+
+          })
+
+        );
+
+        // 147 LOGIC
+
+        if (enable147) {
+
+          const recurringEvents =
+            createRecurringEvents(
+              date,
+              title,
+              notes
+            );
+
+          recurringEvents.forEach(
+            (event) => {
+
+              promises.push(
+                addDoc(
+                  eventsRef,
+                  event
+                )
+              );
+
+            }
+          );
+
+        }
+
+        await Promise.all(
+          promises
+        );
+
+        router.push("/");
+
+      } catch (error) {
+
+        console.log(error);
+
+        alert(
+          "Failed to save topic"
         );
 
       }
 
-      router.push("/");
-
-    } catch (error) {
-
-      console.log(error);
-
-      alert("Failed to save topic");
-
-    } finally {
-
-      setLoading(false);
-
-    }
-
-  };
+    };
 
   return (
 
-    <main className="min-h-screen bg-[#0b1020] text-white p-4 sm:p-8">
+    <main className="
+      min-h-screen
+      bg-[#0f1117]
+      text-white
+      p-6
+    ">
 
-      {/* 147 BUTTON */}
-
-      <Toggle147
-        enabled={revision147}
-        setEnabled={setRevision147}
-      />
-
-      <div className="max-w-4xl mx-auto">
+      <div className="
+        max-w-5xl
+        mx-auto
+      ">
 
         {/* BACK */}
 
         <button
-          onClick={() => router.push("/")}
+
+          onClick={() =>
+            router.push("/")
+          }
+
           className="
+            mb-6
+
             bg-blue-600
             hover:bg-blue-500
+
             px-5
             py-3
+
             rounded-2xl
-            mb-6
+
+            transition
           "
+
         >
+
           ← Back
+
         </button>
 
         {/* CARD */}
 
         <div className="
-          bg-[#151925]
+          bg-[#1a1d26]
+
           border
           border-gray-800
+
           rounded-3xl
-          p-6
-          sm:p-8
+
+          p-8
+
           shadow-2xl
         ">
 
-          <h1 className="text-3xl font-bold mb-8">
+          <div className="
+            flex
+            items-center
+            justify-between
+            mb-8
+          ">
 
-            Create New Topic
-
-          </h1>
-
-          {/* DATE */}
-
-          <div className="mb-6">
-
-            <p className="text-gray-400 mb-2">
-              Selected Date
-            </p>
-
-            <div className="
-              bg-[#0b1020]
-              border
-              border-gray-700
-              rounded-2xl
-              p-4
+            <h1 className="
+              text-3xl
+              font-bold
             ">
-              {date}
-            </div>
+
+              Create New Topic
+
+            </h1>
+
+            {/* 147 */}
+
+            <button
+
+              onClick={() => {
+
+                setEnable147(
+                  !enable147
+                );
+
+                localStorage.setItem(
+
+                  "147-enabled",
+
+                  (!enable147)
+                    .toString()
+
+                );
+
+              }}
+
+              className={`
+
+                px-5
+                py-2
+
+                rounded-2xl
+
+                font-semibold
+
+                transition
+
+                ${
+                  enable147
+
+                  ? `
+                    bg-orange-500
+                    text-black
+                  `
+
+                  : `
+                    bg-blue-600
+                    text-white
+                  `
+                }
+
+              `}
+
+            >
+
+              147
+
+            </button>
 
           </div>
 
           {/* TITLE */}
 
-          <div className="mb-6">
+          <div className="
+            space-y-6
+          ">
 
-            <label className="block text-gray-400 mb-2">
+            <div>
 
-              Topic Name
+              <label className="
+                block
+                mb-2
+                text-gray-400
+              ">
 
-            </label>
+                Topic Heading
 
-            <input
-              value={title}
-              onChange={(e) =>
-                setTitle(e.target.value)
-              }
-              placeholder="Enter topic name"
+              </label>
+
+              <input
+
+                value={title}
+
+                onChange={(e) =>
+                  setTitle(
+                    e.target.value
+                  )
+                }
+
+                placeholder="
+                  Topic Heading
+                "
+
+                className="
+                  w-full
+
+                  bg-[#0f1117]
+
+                  border
+                  border-gray-700
+
+                  rounded-2xl
+
+                  p-4
+
+                  outline-none
+
+                  focus:border-blue-500
+                "
+              />
+
+            </div>
+
+            {/* NOTES */}
+
+            <div>
+
+              <label className="
+                block
+                mb-2
+                text-gray-400
+              ">
+
+                Notes
+
+              </label>
+
+              <textarea
+
+                value={notes}
+
+                onChange={(e) =>
+                  setNotes(
+                    e.target.value
+                  )
+                }
+
+                rows={18}
+
+                placeholder="
+                  Write Notes...
+                "
+
+                className="
+                  w-full
+
+                  bg-[#0f1117]
+
+                  border
+                  border-gray-700
+
+                  rounded-2xl
+
+                  p-4
+
+                  outline-none
+
+                  focus:border-blue-500
+                "
+              />
+
+            </div>
+
+            {/* SAVE */}
+
+            <button
+
+              onClick={saveEvent}
+
               className="
                 w-full
-                bg-[#0b1020]
-                border
-                border-gray-700
+
+                bg-green-600
+                hover:bg-green-500
+
+                py-4
+
                 rounded-2xl
-                p-4
-                outline-none
+
+                font-semibold
+
+                transition
               "
-            />
+
+            >
+
+              Save Topic
+
+            </button>
 
           </div>
-
-          {/* NOTES */}
-
-          <div className="mb-8">
-
-            <label className="block text-gray-400 mb-2">
-
-              Notes
-
-            </label>
-
-            <textarea
-              value={notes}
-              onChange={(e) =>
-                setNotes(e.target.value)
-              }
-              rows={12}
-              placeholder="Write notes..."
-              className="
-                w-full
-                bg-[#0b1020]
-                border
-                border-gray-700
-                rounded-2xl
-                p-4
-                outline-none
-              "
-            />
-
-          </div>
-
-          {/* SAVE */}
-
-          <button
-            onClick={saveNote}
-            disabled={loading}
-            className="
-              w-full
-              bg-green-600
-              hover:bg-green-500
-              py-4
-              rounded-2xl
-              font-bold
-            "
-          >
-
-            {loading ? "Saving..." : "Save Topic"}
-
-          </button>
 
         </div>
 
