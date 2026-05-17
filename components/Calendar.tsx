@@ -2,33 +2,30 @@
 
 import { useEffect, useState } from "react";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import {
-
   collection,
-
   onSnapshot,
-
   query,
-
 } from "firebase/firestore";
 
 import { auth, db } from "@/lib/firebase";
 
-interface EventType {
+interface CalendarEvent {
 
   id: string;
+
+  date: string;
 
   title: string;
 
   notes: string;
 
-  date: string;
-
   isRevision?: boolean;
 
   completed?: boolean;
+
 }
 
 interface Props {
@@ -36,6 +33,7 @@ interface Props {
   selectedMonth: number;
 
   selectedYear: number;
+
 }
 
 export default function Calendar({
@@ -46,11 +44,15 @@ export default function Calendar({
 
 }: Props) {
 
-  const [events, setEvents] = useState<EventType[]>([]);
+  const router = useRouter();
+
+  const [events, setEvents] =
+    useState<CalendarEvent[]>([]);
 
   useEffect(() => {
 
-    const user = auth.currentUser;
+    const user =
+      auth.currentUser;
 
     if (!user) return;
 
@@ -65,13 +67,11 @@ export default function Calendar({
 
     );
 
-    const unsubscribe = onSnapshot(
+    const unsubscribe =
+      onSnapshot(q, (snapshot) => {
 
-      q,
-
-      (snapshot) => {
-
-        const loadedEvents: EventType[] = [];
+        const loadedEvents:
+          CalendarEvent[] = [];
 
         snapshot.forEach((doc) => {
 
@@ -81,29 +81,29 @@ export default function Calendar({
 
             ...doc.data(),
 
-          } as EventType);
+          } as CalendarEvent);
 
         });
 
         setEvents(loadedEvents);
 
-      }
-
-    );
+      });
 
     return () => unsubscribe();
 
   }, []);
 
-  const daysInMonth = new Date(
+  const daysOfWeek = [
 
-    selectedYear,
+    "Sun",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
 
-    selectedMonth + 1,
-
-    0
-
-  ).getDate();
+  ];
 
   const firstDay = new Date(
 
@@ -115,191 +115,52 @@ export default function Calendar({
 
   ).getDay();
 
-  const dayNames = [
+  const totalDays = new Date(
 
-    "Sunday",
+    selectedYear,
 
-    "Monday",
+    selectedMonth + 1,
 
-    "Tuesday",
+    0
 
-    "Wednesday",
+  ).getDate();
 
-    "Thursday",
-
-    "Friday",
-
-    "Saturday",
-
-  ];
-
-  const cells = [];
-
-  // EMPTY CELLS
+  const calendarDays = [];
 
   for (let i = 0; i < firstDay; i++) {
 
-    cells.push(
+    calendarDays.push(null);
 
-      <div key={`empty-${i}`} />
-
-    );
   }
 
-  // DAYS
+  for (let day = 1; day <= totalDays; day++) {
 
-  for (let day = 1; day <= daysInMonth; day++) {
+    calendarDays.push(day);
 
-    const formattedDate = `${selectedYear}-${selectedMonth + 1}-${day}`;
-
-    const dayEvents = events.filter(
-
-      (event) => event.date === formattedDate
-
-    );
-
-    cells.push(
-
-      <div
-
-        key={day}
-
-        className="bg-[#1a1d26] border border-gray-800 rounded-3xl p-4 min-h-[170px] hover:border-blue-500 transition"
-
-      >
-
-        {/* DAY */}
-
-        <div className="flex items-center justify-between mb-3">
-
-          <div>
-
-            <p className="text-sm text-gray-400">
-
-              {
-
-                dayNames[
-                  new Date(
-                    selectedYear,
-                    selectedMonth,
-                    day
-                  ).getDay()
-                ]
-
-              }
-
-            </p>
-
-            <h2 className="text-2xl font-bold">
-
-              {day}
-
-            </h2>
-
-          </div>
-
-          {/* ADD BUTTON */}
-
-          <Link
-
-            href={`/note/new?date=${formattedDate}`}
-
-            className="bg-blue-600 hover:bg-blue-500 w-8 h-8 rounded-full flex items-center justify-center"
-
-          >
-
-            +
-
-          </Link>
-
-        </div>
-
-        {/* EVENTS */}
-
-        <div className="space-y-2">
-
-          {dayEvents.length === 0 && (
-
-            <p className="text-gray-500 text-sm">
-
-              No Topics
-
-            </p>
-
-          )}
-
-          {dayEvents.map((event) => (
-
-            <Link
-
-              key={event.id}
-
-              href={`/note/${event.id}`}
-
-              className={`block p-3 rounded-2xl text-sm border transition
-
-                ${event.completed
-
-                ? "bg-green-600/30 border-green-500"
-
-                : event.isRevision
-
-                    ? "bg-purple-600/20 border-purple-500"
-
-                    : "bg-blue-600/20 border-blue-500"
-
-                }
-                `}
-
-            >
-
-              <div className="flex items-center justify-between">
-
-                <span className="font-medium">
-
-                    {event.title}
-
-                </span>
-
-                {event.completed && (
-
-                    <span className="text-green-400 text-lg">
-
-                    ✅
-
-                    </span>
-
-                )}
-
-                </div>
-
-            </Link>
-
-          ))}
-
-        </div>
-
-      </div>
-
-    );
   }
 
   return (
 
     <div>
 
-      {/* DAY HEADERS */}
+      {/* DAYS */}
 
-      <div className="grid grid-cols-7 gap-4 mb-4">
+      <div className="
+        grid
+        grid-cols-7
+        gap-4
+        mb-4
+      ">
 
-        {dayNames.map((day) => (
+        {daysOfWeek.map((day) => (
 
           <div
-
             key={day}
-
-            className="text-center text-gray-400 font-semibold"
-
+            className="
+              text-center
+              text-gray-400
+              font-semibold
+            "
           >
 
             {day}
@@ -312,12 +173,211 @@ export default function Calendar({
 
       {/* CALENDAR */}
 
-      <div className="grid grid-cols-7 gap-4">
+      <div className="
+        grid
+        grid-cols-2
+        md:grid-cols-4
+        lg:grid-cols-7
+        gap-4
+      ">
 
-        {cells}
+        {calendarDays.map((day, index) => {
+
+          if (!day) {
+
+            return (
+              <div key={index}></div>
+            );
+
+          }
+
+          // IMPORTANT DATE FORMAT
+
+          const currentDate =
+`${selectedYear}-${selectedMonth + 1}-${day}`;
+
+          const dayEvents =
+            events.filter(
+
+              (event) =>
+                event.date === currentDate
+
+            );
+
+          return (
+
+            <div
+
+              key={index}
+
+              className="
+                bg-[#1a1d26]
+
+                border
+                border-gray-800
+
+                rounded-3xl
+
+                h-44
+
+                p-4
+
+                shadow-lg
+
+                hover:border-blue-500
+
+                transition
+
+                overflow-hidden
+              "
+
+            >
+
+              {/* HEADER */}
+
+              <div className="
+                flex
+                items-center
+                justify-between
+                mb-3
+              ">
+
+                <div className="
+                  text-sm
+                  font-bold
+                  text-white
+                ">
+
+                  {day}
+
+                </div>
+
+                {/* CREATE */}
+
+                <button
+
+                  onClick={() =>
+
+                    router.push(
+`/note/new?date=${currentDate}`
+                    )
+
+                  }
+
+                  className="
+                    bg-blue-600
+                    hover:bg-blue-500
+
+                    text-xs
+
+                    px-2
+                    py-1
+
+                    rounded-lg
+
+                    transition
+                  "
+
+                >
+
+                  +
+
+                </button>
+
+              </div>
+
+              {/* EVENTS */}
+
+              <div className="
+                space-y-2
+                overflow-y-auto
+                max-h-28
+              ">
+
+                {dayEvents.length === 0 && (
+
+                  <div className="
+                    text-xs
+                    text-gray-500
+                  ">
+
+                    No Topics
+
+                  </div>
+
+                )}
+
+                {dayEvents.map((event) => (
+
+                  <button
+
+                    key={event.id}
+
+                    onClick={() =>
+
+                      router.push(
+`/note/${event.id}`
+                      )
+
+                    }
+
+                    className={`
+                      w-full
+
+                      text-left
+                      text-xs
+
+                      rounded-xl
+
+                      px-2
+                      py-1
+
+                      truncate
+
+                      transition
+
+                      ${
+                        event.isRevision
+
+                        ? `
+                          bg-orange-500/20
+                          border
+                          border-orange-500
+                          text-orange-300
+                          hover:bg-orange-500/30
+                        `
+
+                        : `
+                          bg-blue-500/20
+                          border
+                          border-blue-500
+                          text-blue-300
+                          hover:bg-blue-500/30
+                        `
+                      }
+
+                    `}
+
+                  >
+
+                    {event.title}
+
+                  </button>
+
+                ))}
+
+              </div>
+
+            </div>
+
+          );
+
+        })}
 
       </div>
 
     </div>
+
   );
+
 }
