@@ -12,39 +12,38 @@ export default function Toggle147({
 
   return (
 
-    <div
-      className="
+    <button
+      onClick={() => setEnabled(!enabled)}
+      className={`
         fixed
         bottom-6
         right-6
-        z-[9999]
-      "
+        z-[99999]
+
+        px-6
+        py-4
+
+        rounded-2xl
+
+        text-white
+        text-lg
+        font-bold
+
+        shadow-2xl
+
+        transition-all
+
+        ${
+          enabled
+            ? "bg-green-600 hover:bg-green-500"
+            : "bg-purple-600 hover:bg-purple-500"
+        }
+      `}
     >
 
-      <button
-        onClick={() => setEnabled(!enabled)}
-        className={`
-          px-6
-          py-4
-          rounded-2xl
-          font-bold
-          text-white
-          shadow-2xl
-          transition-all
+      {enabled ? "147 ON" : "147"}
 
-          ${
-            enabled
-              ? "bg-green-600 hover:bg-green-500"
-              : "bg-purple-600 hover:bg-purple-500"
-          }
-        `}
-      >
-
-        {enabled ? "147 ON" : "147"}
-
-      </button>
-
-    </div>
+    </button>
 
   );
 
