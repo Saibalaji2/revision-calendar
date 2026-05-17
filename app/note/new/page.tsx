@@ -2,6 +2,8 @@
 
 export const dynamic = "force-dynamic";
 
+import { Suspense } from "react";
+
 import {
 
   useSearchParams,
@@ -34,7 +36,7 @@ import {
 
 } from "@/lib/firebase";
 
-export default function NewNotePage() {
+function NewNoteContent() {
 
   const searchParams =
     useSearchParams();
@@ -90,8 +92,6 @@ export default function NewNotePage() {
         nextDate.getDate() + day
       );
 
-      // IMPORTANT DATE FORMAT FIX
-
       const formattedDate =
 `${nextDate.getFullYear()}-${
 nextDate.getMonth() + 1
@@ -123,6 +123,7 @@ ${notes}`,
     }
 
     return recurringEvents;
+
   };
 
   const saveEvent =
@@ -140,6 +141,7 @@ ${notes}`,
           );
 
           return;
+
         }
 
         const eventsRef =
@@ -150,9 +152,9 @@ ${notes}`,
             "events"
           );
 
-        // MAIN EVENT
-
         const promises = [];
+
+        // MAIN TOPIC
 
         promises.push(
 
@@ -232,8 +234,6 @@ ${notes}`,
         mx-auto
       ">
 
-        {/* BACK */}
-
         <button
 
           onClick={() =>
@@ -259,8 +259,6 @@ ${notes}`,
           ← Back
 
         </button>
-
-        {/* CARD */}
 
         <div className="
           bg-[#1a1d26]
@@ -291,7 +289,7 @@ ${notes}`,
 
             </h1>
 
-            {/* 147 */}
+            {/* 147 BUTTON */}
 
             <button
 
@@ -347,11 +345,11 @@ ${notes}`,
 
           </div>
 
-          {/* TITLE */}
-
           <div className="
             space-y-6
           ">
+
+            {/* TITLE */}
 
             <div>
 
@@ -483,6 +481,22 @@ ${notes}`,
       </div>
 
     </main>
+
+  );
+
+}
+
+export default function NewNotePage() {
+
+  return (
+
+    <Suspense fallback={<div>
+      Loading...
+    </div>}>
+
+      <NewNoteContent />
+
+    </Suspense>
 
   );
 
